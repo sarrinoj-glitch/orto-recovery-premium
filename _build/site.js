@@ -24,8 +24,19 @@
   if (hero) requestAnimationFrame(() => hero.classList.add('ready'))
 
   // Лента натягивается, когда попадает в экран — единственный мотив движения на сайте
-  const io = new IntersectionObserver((es) => es.forEach((e) => { if (e.isIntersecting) { e.target.classList.add('on'); io.unobserve(e.target) } }), { threshold: 0.6 })
-  $$('.stretch').forEach((el, i) => { if (reduce) el.classList.add('on'); else { el.style.transitionDelay = el.closest('.hero') ? `${0.35 + (i % 2) * 0.18}s` : '0s'; io.observe(el) } })
+  // Следим за блоком, а не за самой лентой: свёрнутая лента нулевой ширины и может быть обрезана краем блока
+  const io = new IntersectionObserver((es) => es.forEach((e) => {
+    if (!e.isIntersecting) return
+    $$('.stretch', e.target).forEach((t) => t.classList.add('on'))
+    io.unobserve(e.target)
+  }), { threshold: 0.3 })
+  const boxes = new Set()
+  $$('.stretch').forEach((el, i) => {
+    if (reduce) { el.classList.add('on'); return }
+    if (el.closest('.hero')) el.style.transitionDelay = `${0.35 + (i % 2) * 0.18}s`
+    boxes.add(el.closest('.doc-pic, .sec-head, .hero-photo, .hero-cta, .visit > div, section, footer') || el.parentElement)
+  })
+  boxes.forEach((b) => io.observe(b))
 
   // «Где болит»: открыта одна строка
   const zones = $$('.zone')
